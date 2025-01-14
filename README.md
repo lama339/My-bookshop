@@ -19,11 +19,11 @@
 
     <section id="shop">
         <h2>Shop</h2>
-        <div class="product" data-id="1" data-name="Book Title 1" data-price="15.99">
+        <div class="product" data-id="1" data-name="Book Title 1" data-price="$5.00">
             <img src="book1.jpg" alt="Book 1 Cover" width="150">
             <h3>Book Title 1</h3>
             <p>Author: Jane Doe</p>
-            <p>Price: $15.99</p>
+            <p>Price: $5.00</p>
             <button class="add-to-cart">Add to Cart</button>
         </div>
         <div class="product" data-id="2" data-name="Book Title 2" data-price="12.99">
