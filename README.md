@@ -5,63 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bookshop</title>
     <style>
-        /* General Styles */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f9f9f9;
+            background-color: #FFEBEB; /* Light pink background */
+            color: #000; /* Black text */
         }
-
         header {
-            background-color: #4CAF50;
+            background-color: #FF6F61; /* Darker pink for header */
             color: white;
             padding: 20px;
             text-align: center;
         }
-
         nav ul {
             list-style-type: none;
             margin: 0;
             padding: 0;
             display: flex;
             justify-content: center;
-            gap: 15px;
+            gap: 20px;
         }
-
         nav ul li {
             display: inline;
         }
-
         nav ul li a {
             color: white;
             text-decoration: none;
             font-size: 18px;
+            cursor: pointer;
         }
-
         section {
             padding: 20px;
         }
-
+        .hidden {
+            display: none;
+        }
         h2 {
             color: #333;
         }
-
         .book-container {
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
         }
-
         .book {
             border: 1px solid #ccc;
             padding: 10px;
             width: 200px;
             background-color: white;
         }
-
         footer {
-            background-color: #4CAF50;
+            background-color: #FF6F61;
             color: white;
             text-align: center;
             padding: 10px 0;
@@ -70,39 +65,32 @@
             width: 100%;
         }
     </style>
-    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
 </head>
 <body>
-    <!-- Header -->
     <header>
         <h1>Welcome to Our Bookshop</h1>
         <nav>
             <ul>
-                <li><a href="#home">Home</a></li>
-                <li><a href="#books">Books</a></li>
-                <li><a href="#cart">Cart</a></li>
-                <li><a href="#contact">Contact</a></li>
+                <li><a onclick="navigateTo('home')">Home</a></li>
+                <li><a onclick="navigateTo('books')">Books</a></li>
+                <li><a onclick="navigateTo('cart')">Cart</a></li>
+                <li><a onclick="navigateTo('contact')">Contact</a></li>
             </ul>
         </nav>
     </header>
 
-    <!-- Home Section -->
     <section id="home">
         <h2>Home</h2>
         <p>Welcome to our online bookshop! Explore a wide range of books and find your next favorite read.</p>
     </section>
 
-    <!-- Books Section -->
-    <section id="books">
+    <section id="books" class="hidden">
         <h2>Books</h2>
-        <div class="book-container">
-            <!-- Books will be dynamically added here by JavaScript -->
-        </div>
+        <div class="book-container"></div>
     </section>
 
-    <!-- Cart Section -->
-    <section id="cart">
-        <h2>Shopping Cart</h2>
+    <section id="cart" class="hidden">
+        <h2>Cart</h2>
         <ul id="cart-items"></ul>
         <p>Delivery Fee: $3.00</p>
         <p>Total: $<span id="cart-total">0.00</span></p>
@@ -120,128 +108,118 @@
         </form>
     </section>
 
-    <!-- Contact Section -->
-    <section id="contact">
+    <section id="contact" class="hidden">
         <h2>Contact Us</h2>
-        <p>If you have any questions, feel free to contact us at support@bookshop.com.</p>
+        <p>If you have any questions, feel free to contact us at <a href="mailto:support@bookshop.com">support@bookshop.com</a>.</p>
     </section>
 
-    <!-- Footer -->
     <footer>
         <p>© 2025 Bookshop. All Rights Reserved.</p>
     </footer>
 
+    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
     <script>
-        // Initialize EmailJS (replace with your actual User ID)
         emailjs.init("your_user_id"); // Replace with your EmailJS User ID
 
-        document.addEventListener("DOMContentLoaded", () => {
-            const books = [];
-            for (let i = 1; i <= 100; i++) {
-                books.push({
-                    id: i,
-                    title: `Book Title ${i}`,
-                    author: `Author ${i}`,
-                    price: (Math.random() * 20 + 5).toFixed(2), // Random price between $5 and $25
-                });
+        // Navigation
+        function navigateTo(sectionId) {
+            document.querySelectorAll("section").forEach((section) => section.classList.add("hidden"));
+            document.getElementById(sectionId).classList.remove("hidden");
+        }
+
+        // Load Books
+        const books = Array.from({ length: 100 }, (_, i) => ({
+            id: i + 1,
+            title: `Book Title ${i + 1}`,
+            author: `Author ${i + 1}`,
+            price: (Math.random() * 20 + 5).toFixed(2),
+        }));
+
+        const bookContainer = document.querySelector(".book-container");
+        books.forEach((book) => {
+            const bookDiv = document.createElement("div");
+            bookDiv.className = "book";
+            bookDiv.innerHTML = `
+                <h3>${book.title}</h3>
+                <p>Author: ${book.author}</p>
+                <p>Price: $${book.price}</p>
+                <button onclick="addToCart(${book.id}, '${book.title}', ${book.price})">Add to Cart</button>
+            `;
+            bookContainer.appendChild(bookDiv);
+        });
+
+        // Cart Functionality
+        const cart = [];
+        const cartItemsList = document.getElementById("cart-items");
+        const cartTotal = document.getElementById("cart-total");
+
+        function addToCart(id, name, price) {
+            const existing = cart.find((item) => item.id === id);
+            if (existing) {
+                existing.quantity++;
+            } else {
+                cart.push({ id, name, price, quantity: 1 });
+            }
+            updateCart();
+        }
+
+        function updateCart() {
+            cartItemsList.innerHTML = "";
+            let total = 0;
+
+            cart.forEach((item) => {
+                total += item.price * item.quantity;
+                const li = document.createElement("li");
+                li.textContent = `${item.name} - $${item.price} x ${item.quantity}`;
+                cartItemsList.appendChild(li);
+            });
+
+            total += 3; // Delivery Fee
+            cartTotal.textContent = total.toFixed(2);
+        }
+
+        // Handle Checkout Form
+        document.getElementById("checkout-form").addEventListener("submit", (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById("customer-name").value;
+            const address = document.getElementById("address").value;
+            const city = document.getElementById("city").value;
+            const phone = document.getElementById("phone").value;
+
+            if (cart.length === 0) {
+                alert("Your cart is empty. Please add items to the cart before purchasing.");
+                return;
             }
 
-            const bookContainer = document.querySelector(".book-container");
-            const cart = [];
-            const cartItemsList = document.getElementById("cart-items");
-            const cartTotal = document.getElementById("cart-total");
+            const orderDetails = cart.map((item) => `${item.name} x${item.quantity}`).join("\n");
+            const totalAmount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0) + 3;
 
-            // Render books
-            books.forEach((book) => {
-                const bookDiv = document.createElement("div");
-                bookDiv.className = "book";
-                bookDiv.innerHTML = `
-                    <h3>${book.title}</h3>
-                    <p>Author: ${book.author}</p>
-                    <p>Price: $${book.price}</p>
-                    <button data-id="${book.id}" data-name="${book.title}" data-price="${book.price}">Add to Cart</button>
-                `;
-                bookContainer.appendChild(bookDiv);
-            });
+            const message = `
+                New Order from ${name}:
 
-            // Add to Cart
-            document.querySelectorAll(".book button").forEach((button) => {
-                button.addEventListener("click", (e) => {
-                    const id = e.target.dataset.id;
-                    const name = e.target.dataset.name;
-                    const price = parseFloat(e.target.dataset.price);
+                Order Details:
+                ${orderDetails}
 
-                    const existingBook = cart.find((item) => item.id === id);
-                    if (existingBook) {
-                        existingBook.quantity++;
-                    } else {
-                        cart.push({ id, name, price, quantity: 1 });
-                    }
+                Address: ${address}, ${city}
+                Phone: ${phone}
 
-                    updateCart();
-                });
-            });
+                Total: $${totalAmount.toFixed(2)}
+            `;
 
-            // Update Cart
-            function updateCart() {
-                cartItemsList.innerHTML = "";
-                let total = 0;
-
-                cart.forEach((item) => {
-                    total += item.price * item.quantity;
-                    const li = document.createElement("li");
-                    li.textContent = `${item.name} - $${item.price} x ${item.quantity}`;
-                    cartItemsList.appendChild(li);
-                });
-
-                total += 3; // Delivery Fee
-                cartTotal.textContent = total.toFixed(2);
-            }
-
-            // Handle Checkout Form
-            const checkoutForm = document.getElementById("checkout-form");
-            checkoutForm.addEventListener("submit", (e) => {
-                e.preventDefault();
-
-                const name = document.getElementById("customer-name").value;
-                const address = document.getElementById("address").value;
-                const city = document.getElementById("city").value;
-                const phone = document.getElementById("phone").value;
-
-                if (cart.length === 0) {
-                    alert("Your cart is empty. Please add items to the cart before purchasing.");
-                    return;
-                }
-
-                const orderDetails = cart.map((item) => `${item.name} x${item.quantity}`).join("\n");
-                const totalAmount = cart.reduce((sum, item) => sum + item.price * item.quantity, 0) + 3;
-
-                const message = `
-                    New Order from ${name}:
-
-                    Order Details:
-                    ${orderDetails}
-
-                    Address: ${address}, ${city}
-                    Phone: ${phone}
-
-                    Total: $${totalAmount.toFixed(2)}
-                `;
-
-                // Send email via EmailJS
-                emailjs.send("your_service_id", "your_template_id", {
-                    to_email: "your_email@example.com", // Replace with your email
-                    subject: "New Order",
-                    message: message,
-                })
-                .then(() => {
-                    alert("Your order has been placed successfully!");
-                    cart.length = 0;
-                    updateCart();
-                    checkoutForm.reset();
-                })
-                .catch(() => alert("Failed to send order. Please try again."));
-            });
+            // Send email via EmailJS
+            emailjs.send("your_service_id", "your_template_id", {
+                to_email: "your_email@example.com", // Replace with your email
+                subject: "New Order",
+                message: message,
+            })
+            .then(() => {
+                alert("Your order has been placed successfully!");
+                cart.length = 0;
+                updateCart();
+                e.target.reset();
+            })
+            .catch(() => alert("Failed to send order. Please try again."));
         });
     </script>
 </body>
