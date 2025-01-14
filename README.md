@@ -67,11 +67,11 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f9f9f9;
+    background-color: #999;
 }
 
 header {
-    background-color: #4CAF50;
+    background-color: #330;
     color: white;
     padding: 20px;
     text-align: center;
