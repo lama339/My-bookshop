@@ -9,11 +9,11 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #FFEBEB;
-            color: #000;
+            background-color: #FFEBEB; /* Light pink background */
+            color: #000; /* Black text */
         }
         header {
-            background-color: #FF6F61;
+            background-color: #FF6F61; /* Darker pink for header */
             color: white;
             padding: 20px;
             text-align: center;
@@ -64,13 +64,19 @@
             bottom: 0;
             width: 100%;
         }
-        .admin-panel {
-            margin-top: 20px;
+        .admin-page input {
+            margin-bottom: 10px;
+            padding: 5px;
         }
-        .book-edit-form input, .book-edit-form textarea {
-            margin: 10px 0;
-            padding: 8px;
-            width: 100%;
+        .admin-page button {
+            padding: 10px;
+            background-color: #FF6F61;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .admin-page form {
+            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -81,7 +87,6 @@
             <ul>
                 <li><a onclick="navigateTo('home')">Home</a></li>
                 <li><a onclick="navigateTo('books')">Books</a></li>
-                <li><a onclick="navigateTo('delivery')">Delivery</a></li>
                 <li><a onclick="navigateTo('contact')">Contact</a></li>
                 <li><a onclick="navigateTo('admin')">Admin</a></li>
             </ul>
@@ -90,7 +95,7 @@
 
     <section id="home">
         <h2>Home</h2>
-        <p id="home-content">Welcome to our online bookshop! Explore a wide range of books and find your next favorite read.</p>
+        <p id="home-text-content">Welcome to our online bookshop! Explore a wide range of books and find your next favorite read.</p>
     </section>
 
     <section id="books" class="hidden">
@@ -98,38 +103,48 @@
         <div class="book-container" id="book-container"></div>
     </section>
 
-    <section id="delivery" class="hidden">
-        <h2>Delivery</h2>
-        <p>Delivery Fee: $3.00</p>
-        <p>Standard delivery time: 3-5 business days.</p>
-    </section>
-
     <section id="contact" class="hidden">
         <h2>Contact Us</h2>
-        <p id="contact-content">If you have any questions, feel free to contact us at <a href="mailto:support@bookshop.com">support@bookshop.com</a>.</p>
+        <p id="contact-text-content">If you have any questions, feel free to contact us at <a href="mailto:support@bookshop.com">support@bookshop.com</a>.</p>
     </section>
 
-    <section id="admin" class="hidden">
-        <h2>Admin Panel</h2>
-        <form id="admin-form">
-            <label for="username">Username:</label>
-            <input type="text" id="username" required>
-            <label for="password">Password:</label>
-            <input type="password" id="password" required>
+    <section id="admin" class="hidden admin-page">
+        <h2>Admin Login</h2>
+        <form id="admin-login-form">
+            <input type="text" id="admin-username" placeholder="Username" required>
+            <input type="password" id="admin-password" placeholder="Password" required>
             <button type="submit">Login</button>
         </form>
 
-        <div class="admin-panel hidden">
-            <h3>Edit Book Information</h3>
-            <form id="book-edit-form" class="book-edit-form">
-                <input type="text" id="edit-book-title" placeholder="Book Title" required>
-                <input type="text" id="edit-book-price" placeholder="Book Price" required>
-                <input type="file" id="edit-book-image" placeholder="Book Image">
-                <button type="submit">Save Book</button>
+        <div id="admin-dashboard" class="hidden">
+            <h2>Admin Dashboard</h2>
+            <h3>Edit Books</h3>
+            <form id="edit-book-form">
+                <input type="number" id="book-id" placeholder="Book ID" required>
+                <input type="text" id="book-title" placeholder="Book Title" required>
+                <input type="text" id="book-author" placeholder="Author" required>
+                <input type="number" id="book-price" placeholder="Price" required>
+                <input type="file" id="book-image" accept="image/*">
+                <button type="submit">Update Book</button>
             </form>
 
-            <h3>Existing Books</h3>
-            <div id="book-list"></div>
+            <h3>Edit Home Page</h3>
+            <form id="edit-home-form">
+                <textarea id="home-text" placeholder="Edit Home Page Text" rows="4" cols="50"></textarea>
+                <button type="submit">Save Home Page</button>
+            </form>
+
+            <h3>Edit Contact Page</h3>
+            <form id="edit-contact-form">
+                <textarea id="contact-text" placeholder="Edit Contact Page Text" rows="4" cols="50"></textarea>
+                <button type="submit">Save Contact Page</button>
+            </form>
+
+            <h3>Edit Delivery Page</h3>
+            <form id="edit-delivery-form">
+                <textarea id="delivery-text" placeholder="Edit Delivery Page Text" rows="4" cols="50"></textarea>
+                <button type="submit">Save Delivery Page</button>
+            </form>
         </div>
     </section>
 
@@ -137,106 +152,121 @@
         <p>© 2025 Bookshop. All Rights Reserved.</p>
     </footer>
 
+    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
     <script>
+        emailjs.init("your_user_id"); // Replace with your EmailJS User ID
+
+        // Initial books data
+        let books = JSON.parse(localStorage.getItem('books')) || [
+            { id: 1, title: "Book 1", author: "Author 1", price: 10.00 },
+            { id: 2, title: "Book 2", author: "Author 2", price: 12.50 },
+        ];
+
+        // Update localStorage with current book data
+        function saveBooksToLocalStorage() {
+            localStorage.setItem('books', JSON.stringify(books));
+        }
+
+        // Display books
+        function loadBooks() {
+            const bookContainer = document.getElementById("book-container");
+            bookContainer.innerHTML = '';
+            books.forEach((book) => {
+                const bookDiv = document.createElement("div");
+                bookDiv.className = "book";
+                bookDiv.innerHTML = `
+                    <h3>${book.title}</h3>
+                    <p>Author: ${book.author}</p>
+                    <p>Price: $${book.price}</p>
+                `;
+                bookContainer.appendChild(bookDiv);
+            });
+        }
+
         // Navigation
         function navigateTo(sectionId) {
             document.querySelectorAll("section").forEach((section) => section.classList.add("hidden"));
             document.getElementById(sectionId).classList.remove("hidden");
         }
 
-        // Load Books from LocalStorage
-        let books = JSON.parse(localStorage.getItem('books')) || [];
-        const bookContainer = document.getElementById("book-container");
-
-        function renderBooks() {
-            bookContainer.innerHTML = '';
-            books.forEach((book, index) => {
-                const bookDiv = document.createElement("div");
-                bookDiv.className = "book";
-                bookDiv.innerHTML = `
-                    <h3>${book.title}</h3>
-                    <p>Price: $${book.price}</p>
-                    <img src="${book.image}" alt="${book.title}" style="width: 100%; height: auto;">
-                    <button onclick="editBook(${index})">Edit</button>
-                    <button onclick="deleteBook(${index})">Delete</button>
-                `;
-                bookContainer.appendChild(bookDiv);
-            });
-        }
-
-        renderBooks();
-
         // Admin Login
-        document.getElementById("admin-form").addEventListener("submit", (e) => {
+        document.getElementById("admin-login-form").addEventListener("submit", (e) => {
             e.preventDefault();
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
+            const username = document.getElementById("admin-username").value;
+            const password = document.getElementById("admin-password").value;
 
-            if (username === "admin" && password === "password123") {
-                document.querySelector(".admin-panel").classList.remove("hidden");
-                navigateTo('admin');
+            // Simple hardcoded login check (replace with actual authentication in production)
+            if (username === "admin" && password === "admin123") {
+                document.getElementById("admin-dashboard").classList.remove("hidden");
+                document.getElementById("admin-login-form").classList.add("hidden");
             } else {
-                alert("Invalid credentials");
+                alert("Invalid username or password");
             }
         });
 
-        // Save New or Edited Book
-        document.getElementById("book-edit-form").addEventListener("submit", (e) => {
+        // Editing Books
+        document.getElementById("edit-book-form").addEventListener("submit", (e) => {
             e.preventDefault();
+            const bookId = parseInt(document.getElementById("book-id").value);
+            const bookTitle = document.getElementById("book-title").value;
+            const bookAuthor = document.getElementById("book-author").value;
+            const bookPrice = parseFloat(document.getElementById("book-price").value);
+            const bookImage = document.getElementById("book-image").files[0];
 
-            const title = document.getElementById("edit-book-title").value;
-            const price = document.getElementById("edit-book-price").value;
-            const image = document.getElementById("edit-book-image").files[0];
-
-            if (!title || !price) {
-                alert("Please fill in all the fields.");
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const bookImage = e.target.result;
-
-                // Check if editing an existing book or adding a new one
-                const currentBookIndex = window.currentEditIndex;
-                if (currentBookIndex !== undefined) {
-                    // Editing an existing book
-                    books[currentBookIndex] = { title, price, image: bookImage };
-                } else {
-                    // Adding a new book
-                    books.push({ title, price, image: bookImage });
+            const existingBook = books.find(book => book.id === bookId);
+            if (existingBook) {
+                existingBook.title = bookTitle;
+                existingBook.author = bookAuthor;
+                existingBook.price = bookPrice;
+                // Update image if needed
+                if (bookImage) {
+                    // Handling image uploading should be done on the server-side
                 }
-
-                localStorage.setItem('books', JSON.stringify(books));
-                renderBooks();
-
-                // Reset the form
-                document.getElementById("edit-book-title").value = '';
-                document.getElementById("edit-book-price").value = '';
-                document.getElementById("edit-book-image").value = '';
-                window.currentEditIndex = undefined;
-            };
-            reader.readAsDataURL(image);
+                saveBooksToLocalStorage();
+                alert(`Book ${bookTitle} updated successfully!`);
+                loadBooks(); // Re-render updated book list
+            } else {
+                alert("Book not found.");
+            }
         });
 
-        // Edit Book
-        function editBook(index) {
-            const book = books[index];
-            document.getElementById("edit-book-title").value = book.title;
-            document.getElementById("edit-book-price").value = book.price;
-            window.currentEditIndex = index;
-        }
+        // Editing Pages
+        document.getElementById("edit-home-form").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const homeText = document.getElementById("home-text").value;
+            document.getElementById("home-text-content").textContent = homeText;
+            localStorage.setItem("home-text", homeText);
+            alert("Home page updated!");
+        });
 
-        // Delete Book
-        function deleteBook(index) {
-            books.splice(index, 1);
-            localStorage.setItem('books', JSON.stringify(books));
-            renderBooks();
-        }
+        document.getElementById("edit-contact-form").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const contactText = document.getElementById("contact-text").value;
+            document.getElementById("contact-text-content").textContent = contactText;
+            localStorage.setItem("contact-text", contactText);
+            alert("Contact page updated!");
+        });
 
-        // Initialize saved content for Home and Contact pages
-        document.getElementById("home-content").innerText = localStorage.getItem('homeContent') || "Welcome to our online bookshop!";
-        document.getElementById("contact-content").innerText = localStorage.getItem('contactContent') || "If you have any questions, feel free to contact us.";
+        document.getElementById("edit-delivery-form").addEventListener("submit", (e) => {
+            e.preventDefault();
+            const deliveryText = document.getElementById("delivery-text").value;
+            localStorage.setItem("delivery-text", deliveryText);
+            alert("Delivery page updated!");
+        });
+
+        // Load data on page load
+        window.onload = function() {
+            const savedHomeText = localStorage.getItem("home-text");
+            if (savedHomeText) document.getElementById("home-text-content").textContent = savedHomeText;
+
+            const savedContactText = localStorage.getItem("contact-text");
+            if (savedContactText) document.getElementById("contact-text-content").textContent = savedContactText;
+
+            const savedDeliveryText = localStorage.getItem("delivery-text");
+            if (savedDeliveryText) document.getElementById("delivery-text").value = savedDeliveryText;
+
+            loadBooks();
+        };
     </script>
 </body>
 </html>
