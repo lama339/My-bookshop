@@ -145,6 +145,7 @@
         // Load Books
         let books = JSON.parse(localStorage.getItem('books')) || [];
         const bookContainer = document.getElementById("book-container");
+
         function renderBooks() {
             bookContainer.innerHTML = '';
             books.forEach((book, index) => {
@@ -155,10 +156,12 @@
                     <p>Price: $${book.price}</p>
                     <img src="${book.image}" alt="${book.title}" style="width: 100%; height: auto;">
                     <button onclick="editBook(${index})">Edit</button>
+                    <button onclick="deleteBook(${index})">Delete</button>
                 `;
                 bookContainer.appendChild(bookDiv);
             });
         }
+
         renderBooks();
 
         // Admin Panel
@@ -196,6 +199,14 @@
             const book = books[index];
             document.getElementById("edit-book-title").value = book.title;
             document.getElementById("edit-book-price").value = book.price;
+            document.getElementById("edit-book-image").value = ''; // reset image input
+            currentEditIndex = index;
+        }
+
+        function deleteBook(index) {
+            books.splice(index, 1);
+            localStorage.setItem('books', JSON.stringify(books));
+            renderBooks();
         }
 
         // Save Home Content
