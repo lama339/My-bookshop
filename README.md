@@ -78,6 +78,12 @@
         .admin-page form {
             margin-bottom: 20px;
         }
+        .admin-book-list {
+            margin-top: 20px;
+        }
+        .admin-book-item {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -127,6 +133,11 @@
                 <input type="file" id="book-image" accept="image/*">
                 <button type="submit">Update Book</button>
             </form>
+
+            <button id="add-book-btn">Add New Book</button>
+
+            <h3>Existing Books</h3>
+            <div class="admin-book-list" id="admin-book-list"></div>
 
             <h3>Edit Home Page</h3>
             <form id="edit-home-form">
@@ -183,6 +194,32 @@
             });
         }
 
+        // Display books in admin panel for editing
+        function loadAdminBooks() {
+            const adminBookList = document.getElementById("admin-book-list");
+            adminBookList.innerHTML = '';
+            books.forEach((book) => {
+                const bookDiv = document.createElement("div");
+                bookDiv.className = "admin-book-item";
+                bookDiv.innerHTML = `
+                    <p><strong>${book.title}</strong> - ${book.author} - $${book.price}</p>
+                    <button onclick="editBook(${book.id})">Edit</button>
+                `;
+                adminBookList.appendChild(bookDiv);
+            });
+        }
+
+        // Edit book
+        function editBook(id) {
+            const book = books.find(b => b.id === id);
+            if (book) {
+                document.getElementById("book-id").value = book.id;
+                document.getElementById("book-title").value = book.title;
+                document.getElementById("book-author").value = book.author;
+                document.getElementById("book-price").value = book.price;
+            }
+        }
+
         // Navigation
         function navigateTo(sectionId) {
             document.querySelectorAll("section").forEach((section) => section.classList.add("hidden"));
@@ -199,9 +236,18 @@
             if (username === "admin" && password === "admin123") {
                 document.getElementById("admin-dashboard").classList.remove("hidden");
                 document.getElementById("admin-login-form").classList.add("hidden");
+                loadAdminBooks(); // Load books for admin panel
             } else {
                 alert("Invalid username or password");
             }
+        });
+
+        // Add new book
+        document.getElementById("add-book-btn").addEventListener("click", () => {
+            document.getElementById("book-id").value = '';
+            document.getElementById("book-title").value = '';
+            document.getElementById("book-author").value = '';
+            document.getElementById("book-price").value = '';
         });
 
         // Editing Books
@@ -211,62 +257,44 @@
             const bookTitle = document.getElementById("book-title").value;
             const bookAuthor = document.getElementById("book-author").value;
             const bookPrice = parseFloat(document.getElementById("book-price").value);
-            const bookImage = document.getElementById("book-image").files[0];
 
-            const existingBook = books.find(book => book.id === bookId);
-            if (existingBook) {
-                existingBook.title = bookTitle;
-                existingBook.author = bookAuthor;
-                existingBook.price = bookPrice;
-                // Update image if needed
-                if (bookImage) {
-                    // Handling image uploading should be done on the server-side
+            if (bookId) {
+                const bookIndex = books.findIndex((b) => b.id === bookId);
+                if (bookIndex !== -1) {
+                    books[bookIndex] = { id: bookId, title: bookTitle, author: bookAuthor, price: bookPrice };
                 }
-                saveBooksToLocalStorage();
-                alert(`Book ${bookTitle} updated successfully!`);
-                loadBooks(); // Re-render updated book list
             } else {
-                alert("Book not found.");
+                const newBookId = books.length ? books[books.length - 1].id + 1 : 1;
+                books.push({ id: newBookId, title: bookTitle, author: bookAuthor, price: bookPrice });
             }
+
+            saveBooksToLocalStorage();
+            loadAdminBooks();
         });
 
-        // Editing Pages
+        // Edit Home Page
         document.getElementById("edit-home-form").addEventListener("submit", (e) => {
             e.preventDefault();
             const homeText = document.getElementById("home-text").value;
             document.getElementById("home-text-content").textContent = homeText;
-            localStorage.setItem("home-text", homeText);
-            alert("Home page updated!");
         });
 
+        // Edit Contact Page
         document.getElementById("edit-contact-form").addEventListener("submit", (e) => {
             e.preventDefault();
             const contactText = document.getElementById("contact-text").value;
             document.getElementById("contact-text-content").textContent = contactText;
-            localStorage.setItem("contact-text", contactText);
-            alert("Contact page updated!");
         });
 
+        // Edit Delivery Page
         document.getElementById("edit-delivery-form").addEventListener("submit", (e) => {
             e.preventDefault();
             const deliveryText = document.getElementById("delivery-text").value;
-            localStorage.setItem("delivery-text", deliveryText);
-            alert("Delivery page updated!");
+            document.getElementById("delivery-text-content").textContent = deliveryText;
         });
 
-        // Load data on page load
-        window.onload = function() {
-            const savedHomeText = localStorage.getItem("home-text");
-            if (savedHomeText) document.getElementById("home-text-content").textContent = savedHomeText;
-
-            const savedContactText = localStorage.getItem("contact-text");
-            if (savedContactText) document.getElementById("contact-text-content").textContent = savedContactText;
-
-            const savedDeliveryText = localStorage.getItem("delivery-text");
-            if (savedDeliveryText) document.getElementById("delivery-text").value = savedDeliveryText;
-
-            loadBooks();
-        };
+        // Initial Load
+        loadBooks();
     </script>
 </body>
 </html>
