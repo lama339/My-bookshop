@@ -126,12 +126,11 @@
             <h2>Admin Dashboard</h2>
             <h3>Edit Books</h3>
             <form id="edit-book-form">
-                <input type="number" id="book-id" placeholder="Book ID" required>
                 <input type="text" id="book-title" placeholder="Book Title" required>
                 <input type="text" id="book-author" placeholder="Author" required>
                 <input type="number" id="book-price" placeholder="Price" required>
                 <input type="file" id="book-image" accept="image/*">
-                <button type="submit">Update Book</button>
+                <button type="submit">Save Book</button>
             </form>
 
             <button id="add-book-btn">Add New Book</button>
@@ -204,6 +203,7 @@
                 bookDiv.innerHTML = `
                     <p><strong>${book.title}</strong> - ${book.author} - $${book.price}</p>
                     <button onclick="editBook(${book.id})">Edit</button>
+                    <button onclick="removeBook(${book.id})">Remove</button>
                 `;
                 adminBookList.appendChild(bookDiv);
             });
@@ -213,88 +213,61 @@
         function editBook(id) {
             const book = books.find(b => b.id === id);
             if (book) {
-                document.getElementById("book-id").value = book.id;
                 document.getElementById("book-title").value = book.title;
                 document.getElementById("book-author").value = book.author;
                 document.getElementById("book-price").value = book.price;
             }
         }
 
-        // Navigation
-        function navigateTo(sectionId) {
-            document.querySelectorAll("section").forEach((section) => section.classList.add("hidden"));
-            document.getElementById(sectionId).classList.remove("hidden");
+        // Remove book
+        function removeBook(id) {
+            books = books.filter((book) => book.id !== id);
+            saveBooksToLocalStorage();
+            loadAdminBooks();
+            loadBooks(); // Update the books displayed in the books section
         }
-
-        // Admin Login
-        document.getElementById("admin-login-form").addEventListener("submit", (e) => {
-            e.preventDefault();
-            const username = document.getElementById("admin-username").value;
-            const password = document.getElementById("admin-password").value;
-
-            // Simple hardcoded login check (replace with actual authentication in production)
-            if (username === "admin" && password === "admin123") {
-                document.getElementById("admin-dashboard").classList.remove("hidden");
-                document.getElementById("admin-login-form").classList.add("hidden");
-                loadAdminBooks(); // Load books for admin panel
-            } else {
-                alert("Invalid username or password");
-            }
-        });
 
         // Add new book
         document.getElementById("add-book-btn").addEventListener("click", () => {
-            document.getElementById("book-id").value = '';
             document.getElementById("book-title").value = '';
             document.getElementById("book-author").value = '';
             document.getElementById("book-price").value = '';
         });
 
-        // Editing Books
+        // Adding or updating books
         document.getElementById("edit-book-form").addEventListener("submit", (e) => {
             e.preventDefault();
-            const bookId = parseInt(document.getElementById("book-id").value);
+
             const bookTitle = document.getElementById("book-title").value;
             const bookAuthor = document.getElementById("book-author").value;
             const bookPrice = parseFloat(document.getElementById("book-price").value);
 
-            if (bookId) {
-                const bookIndex = books.findIndex((b) => b.id === bookId);
-                if (bookIndex !== -1) {
-                    books[bookIndex] = { id: bookId, title: bookTitle, author: bookAuthor, price: bookPrice };
-                }
-            } else {
-                const newBookId = books.length ? books[books.length - 1].id + 1 : 1;
-                books.push({ id: newBookId, title: bookTitle, author: bookAuthor, price: bookPrice });
-            }
+            const newBookId = books.length ? books[books.length - 1].id + 1 : 1;
+            books.push({ id: newBookId, title: bookTitle, author: bookAuthor, price: bookPrice });
 
             saveBooksToLocalStorage();
             loadAdminBooks();
+            loadBooks();
         });
 
-        // Edit Home Page
-        document.getElementById("edit-home-form").addEventListener("submit", (e) => {
+        // Admin login handling
+        document.getElementById("admin-login-form").addEventListener("submit", (e) => {
             e.preventDefault();
-            const homeText = document.getElementById("home-text").value;
-            document.getElementById("home-text-content").textContent = homeText;
+            const username = document.getElementById("admin-username").value;
+            const password = document.getElementById("admin-password").value;
+
+            if (username === "admin" && password === "admin123") {
+                document.getElementById("admin-login-form").classList.add("hidden");
+                document.getElementById("admin-dashboard").classList.remove("hidden");
+                loadAdminBooks();
+            } else {
+                alert("Invalid login credentials");
+            }
         });
 
-        // Edit Contact Page
-        document.getElementById("edit-contact-form").addEventListener("submit", (e) => {
-            e.preventDefault();
-            const contactText = document.getElementById("contact-text").value;
-            document.getElementById("contact-text-content").textContent = contactText;
-        });
-
-        // Edit Delivery Page
-        document.getElementById("edit-delivery-form").addEventListener("submit", (e) => {
-            e.preventDefault();
-            const deliveryText = document.getElementById("delivery-text").value;
-            document.getElementById("delivery-text-content").textContent = deliveryText;
-        });
-
-        // Initial Load
+        // Load Books on page load
         loadBooks();
+
     </script>
 </body>
 </html>
