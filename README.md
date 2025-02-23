@@ -64,8 +64,13 @@
             bottom: 0;
             width: 100%;
         }
-        .admin-panel, .delivery-panel, .home-panel, .contact-panel {
+        .admin-panel {
             margin-top: 20px;
+        }
+        .book-edit-form input, .book-edit-form textarea {
+            margin: 10px 0;
+            padding: 8px;
+            width: 100%;
         }
     </style>
 </head>
@@ -116,18 +121,15 @@
 
         <div class="admin-panel hidden">
             <h3>Edit Book Information</h3>
-            <input type="text" id="edit-book-title" placeholder="Book Title">
-            <input type="text" id="edit-book-price" placeholder="Book Price">
-            <input type="file" id="edit-book-image" placeholder="Book Image">
-            <button onclick="saveBookDetails()">Save</button>
+            <form id="book-edit-form" class="book-edit-form">
+                <input type="text" id="edit-book-title" placeholder="Book Title" required>
+                <input type="text" id="edit-book-price" placeholder="Book Price" required>
+                <input type="file" id="edit-book-image" placeholder="Book Image">
+                <button type="submit">Save Book</button>
+            </form>
 
-            <h3>Edit Home Page Content</h3>
-            <textarea id="home-textarea"></textarea>
-            <button onclick="saveHomeContent()">Save Home Content</button>
-
-            <h3>Edit Contact Information</h3>
-            <textarea id="contact-textarea"></textarea>
-            <button onclick="saveContactContent()">Save Contact Content</button>
+            <h3>Existing Books</h3>
+            <div id="book-list"></div>
         </div>
     </section>
 
@@ -142,7 +144,7 @@
             document.getElementById(sectionId).classList.remove("hidden");
         }
 
-        // Load Books
+        // Load Books from LocalStorage
         let books = JSON.parse(localStorage.getItem('books')) || [];
         const bookContainer = document.getElementById("book-container");
 
@@ -164,7 +166,7 @@
 
         renderBooks();
 
-        // Admin Panel
+        // Admin Login
         document.getElementById("admin-form").addEventListener("submit", (e) => {
             e.preventDefault();
             const username = document.getElementById("username").value;
@@ -178,52 +180,61 @@
             }
         });
 
-        function saveBookDetails() {
+        // Save New or Edited Book
+        document.getElementById("book-edit-form").addEventListener("submit", (e) => {
+            e.preventDefault();
+
             const title = document.getElementById("edit-book-title").value;
             const price = document.getElementById("edit-book-price").value;
             const image = document.getElementById("edit-book-image").files[0];
 
-            if (image) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const newBook = { title, price, image: e.target.result };
-                    books.push(newBook);
-                    localStorage.setItem('books', JSON.stringify(books));
-                    renderBooks();
-                };
-                reader.readAsDataURL(image);
+            if (!title || !price) {
+                alert("Please fill in all the fields.");
+                return;
             }
-        }
 
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const bookImage = e.target.result;
+
+                // Check if editing an existing book or adding a new one
+                const currentBookIndex = window.currentEditIndex;
+                if (currentBookIndex !== undefined) {
+                    // Editing an existing book
+                    books[currentBookIndex] = { title, price, image: bookImage };
+                } else {
+                    // Adding a new book
+                    books.push({ title, price, image: bookImage });
+                }
+
+                localStorage.setItem('books', JSON.stringify(books));
+                renderBooks();
+
+                // Reset the form
+                document.getElementById("edit-book-title").value = '';
+                document.getElementById("edit-book-price").value = '';
+                document.getElementById("edit-book-image").value = '';
+                window.currentEditIndex = undefined;
+            };
+            reader.readAsDataURL(image);
+        });
+
+        // Edit Book
         function editBook(index) {
             const book = books[index];
             document.getElementById("edit-book-title").value = book.title;
             document.getElementById("edit-book-price").value = book.price;
-            document.getElementById("edit-book-image").value = ''; // reset image input
-            currentEditIndex = index;
+            window.currentEditIndex = index;
         }
 
+        // Delete Book
         function deleteBook(index) {
             books.splice(index, 1);
             localStorage.setItem('books', JSON.stringify(books));
             renderBooks();
         }
 
-        // Save Home Content
-        function saveHomeContent() {
-            const content = document.getElementById("home-textarea").value;
-            document.getElementById("home-content").innerText = content;
-            localStorage.setItem('homeContent', content);
-        }
-
-        // Save Contact Content
-        function saveContactContent() {
-            const content = document.getElementById("contact-textarea").value;
-            document.getElementById("contact-content").innerText = content;
-            localStorage.setItem('contactContent', content);
-        }
-
-        // Initialize saved content
+        // Initialize saved content for Home and Contact pages
         document.getElementById("home-content").innerText = localStorage.getItem('homeContent') || "Welcome to our online bookshop!";
         document.getElementById("contact-content").innerText = localStorage.getItem('contactContent') || "If you have any questions, feel free to contact us.";
     </script>
